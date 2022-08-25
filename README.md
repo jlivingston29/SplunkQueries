@@ -12,7 +12,7 @@ sourcetype=wineventlog source="WinEventLog:Application" SourceName=CbDefense Mes
 <br />
 
 ### Palo Alto GlobalProtect Private IP address
-```
+```sql
 user=* sourcetype=pan:globalprotect (stage=connected OR stage=logout)
 | table user stage private_ip machine_name
 | stats latest by user
