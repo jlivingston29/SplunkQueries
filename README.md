@@ -3,7 +3,7 @@
 This is a collection of Splunk queries I've made over time that can ben useful for anyone. As time goes on I'll continue to add to this.
 
 ### Carbon Black bypass  
-```Processing
+```
 sourcetype=wineventlog source="WinEventLog:Application" SourceName=CbDefense Message=*Bypass*
 | eval Messages = case(LIKE(Message, "%ExitBypass%"), "now Protecting",
                        LIKE(Message, "%EnterBypass%"), "no longer protecting")
@@ -12,7 +12,7 @@ sourcetype=wineventlog source="WinEventLog:Application" SourceName=CbDefense Mes
 <br />
 
 ### Palo Alto GlobalProtect Private IP address
-```sql
+```
 user=* sourcetype=pan:globalprotect (stage=connected OR stage=logout)
 | table user stage private_ip machine_name
 | stats latest by user
