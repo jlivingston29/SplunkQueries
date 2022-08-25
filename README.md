@@ -10,6 +10,7 @@ sourcetype=wineventlog source="WinEventLog:Application" SourceName=CbDefense Mes
 | table ComputerName SourceName Messages
 ```
 <br />
+
 ### Palo Alto GlobalProtect Private IP address
 ```
 user=* sourcetype=pan:globalprotect (stage=connected OR stage=logout)
@@ -17,6 +18,7 @@ user=* sourcetype=pan:globalprotect (stage=connected OR stage=logout)
 | stats latest by user
 ```
 <br />
+
 ### Palo Alto GlobalProtect Pre-Logon IP address
 ```
 user=pre-logon sourcetype=pan:globalprotect (stage=host-info OR stage=logout) 
@@ -26,6 +28,7 @@ user=pre-logon sourcetype=pan:globalprotect (stage=host-info OR stage=logout)
 | stats latest by machine_name
 ```
 <br />
+
 ### AD user account creation|deletion|enabled|disabled
 ```
 EventCode=4720 OR EventCode=4722 OR EventCode=4725 OR EventCode=4726 sourcetype=WinEventLog source=WinEventLog:Security 
@@ -34,12 +37,14 @@ EventCode=4720 OR EventCode=4722 OR EventCode=4725 OR EventCode=4726 sourcetype=
 | table host Subject_Security_ID domain target name _time
 ```
 <br />
+
 ### AD user added to Domain Admin group
 ```
 index=wineventlog sourcetype=WinEventLog source=WinEventLog:Security (EventCode=4728 OR EventCode=4729) (Group_Name="ServiceAccount" OR Group_Name="Domain Admins")
 | table host Subject_Security_ID Group_Name Member_Security_ID name _time
 ```
 <br />
+
 ### Admin sign-in to Okta Portal
 ```
 index=okta displayMessage="User accessing Okta admin app" sourcetype="OktaIM2:log"
@@ -47,6 +52,7 @@ index=okta displayMessage="User accessing Okta admin app" sourcetype="OktaIM2:lo
 | rename request.ipChain{}.geographicalContext.state AS State, request.ipChain{}.geographicalContext.country AS Country
 ```
 <br />
+
 ### Sign-in to Okta from outside US
 ```
 index=okta sourcetype="OktaIM2:log" "client.geographicalContext.country"!="United States"
