@@ -6,3 +6,4 @@ This is a collection of Splunk queries I've made over time that can ben useful f
 ```
 index=here (source code there)
 ```
+<br />
