@@ -2,6 +2,8 @@
 
 This is a collection of Splunk queries I've made over time that can ben useful for anyone. As time goes on I'll continue to add to this.
 
+Attached to this repo are modifications to the input files for Windows endpoints. Modifications include whitelisting of preferred Event IDs to forward, trimming off useless data on logs, and splitting 4688 events from the rest of my indexes. 
+
 ### Carbon Black bypass  
 ```
 sourcetype=wineventlog source="WinEventLog:Application" SourceName=CbDefense Message=*Bypass*
