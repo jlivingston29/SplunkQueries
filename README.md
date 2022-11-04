@@ -7,6 +7,17 @@ Attached to this repo are:
  - The logging levels of your Windows domain
  - Syslog-ng configuration for anything using syslog and not a universal forwarder
 
+### Windows local account logon
+```
+index=wineventlog sourcetype="WinEventLog" EventCode=4624 Logon_Type!=3
+| eval LocalDomain=mvindex(Account_Domain,1)
+| eval LocalUser=mvindex(Account_Name,1)
+| where LocalDomain == Workstation_Name
+| eval Logon_Type=case(Logon_Type="2","Interactive Logon",Logon_Type="4","Scheduled Task",Logon_Type="5","Service Startup",Logon_Type="7","Unlocked Station",Logon_Type="8","NetworkCleartext",Logon_Type="9","RunAs",Logon_Type="10","RemoteInteractive (RDP)")
+| table _time LocalUser LocalDomain ComputerName Logon_Type src_ip Process_Name
+```
+<br />
+
 ### Carbon Black bypass  
 ```
 sourcetype=wineventlog source="WinEventLog:Application" SourceName=CbDefense Message=*Bypass*
