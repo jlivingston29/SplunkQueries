@@ -10,7 +10,7 @@ Attached to this repo are:
 ### Windows local account logon
 ```
 index=wineventlog sourcetype="WinEventLog" EventCode=4624 Logon_Type!=3
-| fields _time Account_Name Account_Domain ComputerName Logon_Type src_ip Process_Name
+| fields _time Account_Name Account_Domain ComputerName Logon_Type src_ip Process_Name Workstation_Name
 | eval LocalDomain=mvindex(Account_Domain,1)
 | eval LocalUser=mvindex(Account_Name,1)
 | where LocalDomain == Workstation_Name
