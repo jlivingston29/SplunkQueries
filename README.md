@@ -2,7 +2,10 @@
 
 This is a collection of Splunk queries I've made over time that can ben useful for anyone. As time goes on I'll continue to add to this.
 
-Attached to this repo are modifications to the input files for Windows endpoints. Modifications include whitelisting of preferred Event IDs to forward, trimming off useless data on logs, and splitting 4688 events from the rest of my indexes. 
+Attached to this repo are 
+ - modifications to the input files for Windows endpoints. Modifications include whitelisting of preferred Event IDs to forward, trimming off useless data on logs, and splitting 4688 events from the rest of my indexes. 
+ - The logging levels of your Windows domain
+ - Syslog-ng configuration for anything using syslog and not a universal forwarder
 
 ### Carbon Black bypass  
 ```
