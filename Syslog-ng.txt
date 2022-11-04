@@ -1,0 +1,44 @@
+########################################################################################################
+Add the following to "/etc/syslog-ng/syslog-ng.conf"
+
+#change
+options {
+        chain_hostnames(off);
+        flush_lines(0);
+        use_dns(no);
+        use_fqdn(no);
+        dns_cache(no);
+        create_dirs(yes);
+        keep_hostname(yes);
+        #owner("root");
+        #group("adm");
+        #perm(0640);
+        #stats_freq(0);
+        #bad_hostname("^gconfd$");
+
+source s_splunk {
+    udp(ip(0.0.0.0) port(514));
+    tcp(ip(0.0.0.0) port(5514));
+};
+
+destination d_splunk {
+        file("/syslog/$LOGHOST/log/$R_YEAR-$R_MONTH-$R_DAY/$HOST_FROM/$HOST/$FACILITY.log"
+        dir-owner("splunk") dir-group("splunk") dir-perm(0750)
+        owner("splunk") group("splunk") perm(0640));
+};
+
+log { source(s_splunk); destination(d_splunk); };
+##########################################################################################################
+quick and dirty log rotation script
+vim /opt/scripts/log-rotation.sh
+#!/bin/bash
+
+find /syslog/old_logs/secutil03-dmz/ -type f -mtime +3 -exec rm -rf {} \;
+find /syslog/old_logs/secutil03-dmz/ -type d -mtime +3 -exec rm -rf {} \;
+rsync -a /syslog/secutil03-dmz/log/ /syslog/old_logs/secutil03-dmz/
+rm -rf /syslog/secutil03-dmz/log/*
+syslog-ng-ctl reload
+
+crontab -e
+# Everyday at 12am delete old saved logs, move yesterday's logs to /syslog/old_logs and refresh syslog-ng
+0 0 * * * /bin/bash /opt/scripts/log-rotation.sh >> /var/log/scripts.log 2>&1
