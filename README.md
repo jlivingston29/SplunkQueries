@@ -30,18 +30,17 @@ sourcetype=wineventlog source="WinEventLog:Application" SourceName=CbDefense Mes
 
 ### Palo Alto GlobalProtect Private IP address
 ```
-user=* sourcetype=pan:globalprotect (stage=connected OR stage=logout)
-| table user stage private_ip machine_name
+index=palo_alto user=* sourcetype=pan:globalprotect (stage=connected OR stage=logout)
+| fields user stage private_ip machine_name
 | stats latest by user
 ```
 <br />
 
 ### Palo Alto GlobalProtect Pre-Logon IP address
 ```
-user=pre-logon sourcetype=pan:globalprotect (stage=host-info OR stage=logout) 
-| table user private_ip machine_name stage 
-| eval ConnectionStatus=case(stage="host-info","Connected",stage="logout","No Longer Connected") 
-| table machine_name,private_ip,user,ConnectionStatus 
+index=palo_alto user=pre-logon sourcetype=pan:globalprotect (stage=host-info OR stage=logout)
+| fields user private_ip machine_name stage
+| eval ConnectionStatus=case(stage="host-info","Connected",stage="logout","No Longer Connected")
 | stats latest by machine_name
 ```
 <br />
