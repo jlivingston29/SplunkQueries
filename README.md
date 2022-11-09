@@ -47,10 +47,11 @@ index=palo_alto user=pre-logon sourcetype=pan:globalprotect (stage=host-info OR 
 
 ### AD user account creation|deletion|enabled|disabled
 ```
-EventCode=4720 OR EventCode=4722 OR EventCode=4725 OR EventCode=4726 sourcetype=WinEventLog source=WinEventLog:Security 
+EventCode=4720 OR EventCode=4722 OR EventCode=4725 OR EventCode=4726 sourcetype=WinEventLog source=WinEventLog:Security
+| fields host Subject_Security_ID Target_Account_Domain New_Account_Domain Target_Account_Name SAM_Account_Name name _time
 | eval target=coalesce(Target_Account_Name,SAM_Account_Name)
 | eval domain=coalesce(Target_Account_Domain,New_Account_Domain)
-| table host Subject_Security_ID domain target name _time
+| fields host Subject_Security_ID domain target name _time
 ```
 <br />
 
