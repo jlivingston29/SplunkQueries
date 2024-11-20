@@ -76,3 +76,18 @@ index=okta sourcetype="OktaIM2:log" "client.geographicalContext.country"!="Unite
 | table client.geographicalContext.country src_ip src_user body dvc outcome.result _time
 | rename client.geographicalContext.country AS Src_Country, outcome.result AS Outcome
 ```
+
+<br />
+
+### Check for Sudo users
+```
+index=nix source="/var/log/audit/audit.log" (type=SYSCALL OR type=EXECVE OR type=PATH) sudo
+| eval Date_and_Time=strftime(_time, "%m/%d/%Y - %I:%M:%S %p") 
+| rex field=msg "audit\(\d+\.\d+:(?<eventid>[^\)]+)"
+| eval total_argument="" | foreach a* [eval total_argument=if((isnotnull(argc)) AND (match("<<FIELD>>","a[0-9].*")),total_argument." ".<<FIELD>>,total_argument) ]
+| transaction host eventid startswith=type="SYSCALL" endswith=type="PATH"
+| eval total_arg=mvindex(total_argument,1)
+| rename EUID AS "Performed by", AUID AS "Real User", total_arg AS "Command", success AS "Successful"
+| table Date_and_Time, host, "Performed by", "Real User", "Command", "Successful"
+| sort -Date_and_Time
+```
