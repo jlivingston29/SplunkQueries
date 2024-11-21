@@ -91,3 +91,28 @@ index=nix source="/var/log/audit/audit.log" (type=SYSCALL OR type=EXECVE OR type
 | table Date_and_Time, host, "Performed by", "Real User", "Command", "Successful"
 | sort -Date_and_Time
 ```
+
+### Windows - Extended Active Sessions
+```
+index=winevents (source="wineventlog:security" (EventCode=4624 AND (Logon_Type=2 OR Logon_Type=9 OR Logon_Type=10) NOT Security_ID="*DWM-*" NOT Security_ID="*UMFD*" NOT Process_Name="*lsass.exe" NOT Logon_GUID={00000000-0000-0000-0000-000000000000} NOT user=*$) OR EventCode=4801 OR EventCode=4647  OR (EventCode=4634 AND (Logon_Type=2 OR Logon_Type=10) NOT Security_ID="*UMFD*"))
+| eval UserNames=mvindex(Security_ID,1)
+| eval UserName=coalesce(UserNames,Security_ID)
+| eval filteredhardcodedID=if(NOT match(Subject_Logon_ID,"0x3E7"),Subject_Logon_ID, null())
+| eval SessionID = coalesce(filteredhardcodedID, session_id)
+| eval MatchNonZeroLinked=if(NOT match(Linked_Logon_ID,"0x0"),Linked_Logon_ID, null())
+| eval filterNonZeroLinked=if((MatchNonZeroLinked != SessionID),Linked_Logon_ID, null())
+| eval SessionTracker_Transaction = coalesce(filterNonZeroLinked, SessionID)
+| search action=success OR action=logoff
+| eval transaction_type=case(EventCode=4624 AND (Logon_Type=2 OR Logon_Type=10), "start", (EventCode=4647 OR (EventCode=4624 AND Logon_Type=9) OR EventCode=4634), "end")
+| transaction host SessionTracker_Transaction mvlist=transaction_type startswith=transaction_type="start" endswith=transaction_type="end" keepevicted=true
+| eval Login_Duration = tostring(duration, "duration")
+| eval GetTime=strftime(now(), "%Y-%m-%d %H:%M:%S.%3N")
+| eval LogonDuration=tostring(now() -_time, "duration")
+| eval Logon_Type=case(Logon_Type="2","2 - Local Console",Logon_Type="7","7 - Session Unlock",Logon_Type="10","10 - Remote Session",Logon_Type="11","11 - Cached Credentials")
+| search closed_txn=0 transaction_type=start
+| append [search index=winevents source="wineventlog:security" EventCode=1101]
+| rename host as "Source Computer", Logon_Type as "Logon Type", UserName as "User"
+```| table _time "Source Computer" User EventCode "Logon Type" Logon_GUID transaction_type SessionTracker_Transaction SessionTracker_Linked SessionTracker Subject_Logon_ID session_id Logon_ID Linked_Logon_ID LogonDuration process_name```
+| table _time "Source Computer" EventCode User "Logon Type" LogonDuration
+| sort +_time
+```
