@@ -81,17 +81,27 @@ index=okta sourcetype="OktaIM2:log" "client.geographicalContext.country"!="Unite
 
 ### Check for Sudo users
 ```
-index=nix source="/var/log/audit/audit.log" (type=SYSCALL OR type=EXECVE OR type=PATH) sudo
+index=nix source="/var/log/audit/audit.log" type=EXECVE sudo
+| fields - app, - argc
+| foreach a* [| eval total_argument=if(isnull(total_argument),'<<FIELD>>',if(isnull(<<FIELD>>),total_argument,total_argument + " " + '<<FIELD>>')) ]
+| append [search index=nix source="/var/log/audit/audit.log" type=SYSCALL sudo ]
 | eval Date_and_Time=strftime(_time, "%m/%d/%Y - %I:%M:%S %p") 
 | rex field=msg "audit\(\d+\.\d+:(?<eventid>[^\)]+)"
-| eval total_argument="" | foreach a* [eval total_argument=if((isnotnull(argc)) AND (match("<<FIELD>>","a[0-9].*")),total_argument." ".<<FIELD>>,total_argument) ]
-| transaction host eventid startswith=type="SYSCALL" endswith=type="PATH"
-| eval total_arg=mvindex(total_argument,1)
-| rename EUID AS "Performed by", AUID AS "Real User", total_arg AS "Command", success AS "Successful"
-| table Date_and_Time, host, "Performed by", "Real User", "Command", "Successful"
-| sort -Date_and_Time
+| sort +_time
+| transaction host eventid
+| rename EUID AS "Performed by", auid AS "Corp Username", AUID AS "Real User", total_argument AS "Command", success AS "Successful"
+| table Date_and_Time, host, "Performed by", "Corp Username", "Real User", "Command", "Successful"
 ```
+<br />
 
+### Check for Sudo users
+```
+index=nix source="/var/log/audit/audit.log" proctitle=*
+| eval hex_proctitle=replace(proctitle, "00", "20")
+| eval hex_proctitle=replace(hex_proctitle, "(..)", "%\\1")
+| eval decoded_proctitle=urldecode(hex_proctitle)
+| table _time host decoded_proctitle
+```
 ### Windows - Extended Active Sessions
 ```
 index=winevents (source="wineventlog:security" (EventCode=4624 AND (Logon_Type=2 OR Logon_Type=9 OR Logon_Type=10) NOT Security_ID="*DWM-*" NOT Security_ID="*UMFD*" NOT Process_Name="*lsass.exe" NOT Logon_GUID={00000000-0000-0000-0000-000000000000} NOT user=*$) OR EventCode=4801 OR EventCode=4647  OR (EventCode=4634 AND (Logon_Type=2 OR Logon_Type=10) NOT Security_ID="*UMFD*"))
