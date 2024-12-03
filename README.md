@@ -94,7 +94,7 @@ index=nix source="/var/log/audit/audit.log" type=EXECVE sudo
 ```
 <br />
 
-### Check for Sudo users
+### Decode commands in audit.log
 ```
 index=nix source="/var/log/audit/audit.log" proctitle=*
 | eval hex_proctitle=replace(proctitle, "00", "20")
