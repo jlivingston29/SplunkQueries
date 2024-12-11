@@ -94,6 +94,22 @@ index=nix source="/var/log/audit/audit.log" type=EXECVE sudo
 ```
 <br />
 
+### Monitor Service changes
+### -a always,exit -F arch=b64 -S execve -F path=/usr/bin/systemctl -F auid!=4294967295 -F euid=0 -F key=system
+```
+index=nix source="/var/log/audit/audit.log" type=EXECVE (reboot OR shutdown OR halt)
+| fields - app, - argc
+| foreach a* [| eval total_argument=if(isnull(total_argument),'<<FIELD>>',if(isnull(<<FIELD>>),total_argument,total_argument + " " + '<<FIELD>>')) ]
+| append [search index=nix source="/var/log/audit/audit.log" type=SYSCALL key=system ]
+| eval Date_and_Time=strftime(_time, "%m/%d/%Y - %I:%M:%S %p") 
+| rex field=msg "audit\(\d+\.\d+:(?<eventid>[^\)]+)"
+| stats values(_time) as _time values(host) as host values(type) as types values(auid) as auid values(AUID) as AUID values(EUID) as EUID values(total_argument) as total_argument by eventid
+| rename EUID AS "Performed by", auid AS "RTX Username", AUID AS "Real User", total_argument AS "Command"
+| table _time, host, "Performed by", "RTX Username", "Real User", "Command"
+| sort +_time
+```
+<br />
+
 ### Decode commands in audit.log
 ```
 index=nix source="/var/log/audit/audit.log" proctitle=*
