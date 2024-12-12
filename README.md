@@ -104,8 +104,8 @@ index=nix source="/var/log/audit/audit.log" type=EXECVE (reboot OR shutdown OR h
 | eval Date_and_Time=strftime(_time, "%m/%d/%Y - %I:%M:%S %p") 
 | rex field=msg "audit\(\d+\.\d+:(?<eventid>[^\)]+)"
 | stats values(_time) as _time values(host) as host values(type) as types values(auid) as auid values(AUID) as AUID values(EUID) as EUID values(total_argument) as total_argument by eventid
-| rename EUID AS "Performed by", auid AS "RTX Username", AUID AS "Real User", total_argument AS "Command"
-| table _time, host, "Performed by", "RTX Username", "Real User", "Command"
+| rename EUID AS "Performed by", auid AS "CORP Username", AUID AS "Real User", total_argument AS "Command"
+| table _time, host, "Performed by", "CORP Username", "Real User", "Command"
 | sort +_time
 ```
 <br />
