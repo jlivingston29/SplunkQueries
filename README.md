@@ -110,6 +110,23 @@ index=nix source="/var/log/audit/audit.log" type=EXECVE (reboot OR shutdown OR h
 ```
 <br />
 
+### Monitor Switch Users
+### Requires auditd monitoring sudo privleged changes
+```
+index=nix sourcetype=auditd AND syscall=execve OR type=USER_AUTH AND exe=/usr/bin/su
+| eval acct2=if(isnull(euid),acct,euid)
+| eval non_sys_handle=if(uid == euid,null(),euid)
+| eval RealAcct=if(isnull(non_sys_handle),acct,non_sys_handle)
+| eval success=case(res=="success", "Yes", success=="yes", "Yes", success=="no", "No", res=="failed","No") 
+| eval Time=strftime(_time, "%Y-%m-%d %H:%M:%S") 
+| stats values(Time) as Time values(host) as host values(auid) as auid values(success) as success values(exe) as exe values(RealAcct) as RealAcct by pid
+| strcat "user: " auid " elevated as: " RealAcct EventSummary
+| rename host AS "Orig_host", auid AS "Real User", RealAcct AS "Effective User", exe as "Command Executed", success AS "Success"
+| table Time, "Orig_host", "Real User", "Effective User", "Command Executed", EventSummary, "Success"
+| sort +Time
+```
+<br />
+
 ### Decode commands in audit.log
 ```
 index=nix source="/var/log/audit/audit.log" proctitle=*
